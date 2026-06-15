@@ -1,0 +1,71 @@
+<Window x:Class="whispershortkey.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VoiceTray Settings"
+        SizeToContent="Height" Width="420"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True">
+    <Grid Margin="14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                   Text="VoiceTray Settings" FontSize="15" FontWeight="Bold"
+                   Margin="0,0,0,14"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Provider:"
+                   VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="ProviderCombo"
+                  Margin="0,0,0,10" SelectionChanged="ProviderCombo_SelectionChanged">
+            <ComboBoxItem Content="OpenAI"/>
+            <ComboBoxItem Content="Gemini"/>
+        </ComboBox>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="API key:"
+                   VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="ApiKeyBox" Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Model:"
+                   VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="ModelCombo" Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Language:"
+                   VerticalAlignment="Center" Margin="0,0,10,10"/>
+        <ComboBox Grid.Row="4" Grid.Column="1" x:Name="LanguageCombo" Margin="0,0,0,10">
+            <ComboBoxItem Tag="auto" Content="Auto-detect"/>
+            <ComboBoxItem Tag="bg" Content="Български"/>
+            <ComboBoxItem Tag="en" Content="English"/>
+            <ComboBoxItem Tag="es" Content="Español"/>
+            <ComboBoxItem Tag="fr" Content="Français"/>
+            <ComboBoxItem Tag="de" Content="Deutsch"/>
+            <ComboBoxItem Tag="it" Content="Italiano"/>
+            <ComboBoxItem Tag="pt" Content="Português"/>
+            <ComboBoxItem Tag="ru" Content="Русский"/>
+            <ComboBoxItem Tag="ja" Content="日本語"/>
+            <ComboBoxItem Tag="zh" Content="中文"/>
+            <ComboBoxItem Tag="tr" Content="Türkçe"/>
+        </ComboBox>
+
+        <CheckBox Grid.Row="5" Grid.Column="1" x:Name="ClipboardFallbackCheck"
+                  Content="Use clipboard for paste (recommended)" Margin="0,2,0,14"/>
+
+        <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
+                    Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="80" Height="26" IsCancel="True"
+                    Click="CancelButton_Click"/>
+            <Button x:Name="SaveButton" Content="Save" Width="80" Height="26"
+                    Margin="8,0,0,0" IsDefault="True" Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
