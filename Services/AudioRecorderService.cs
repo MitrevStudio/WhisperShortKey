@@ -14,7 +14,18 @@ public class AudioRecorderService : IDisposable
 
     public bool IsRecording => _isRecording;
 
-    public void StartRecording()
+    public static List<(int Id, string Name)> GetInputDevices()
+    {
+        var devices = new List<(int, string)>();
+        for (int i = 0; i < WaveIn.DeviceCount; i++)
+        {
+            var caps = WaveIn.GetCapabilities(i);
+            devices.Add((i, caps.ProductName));
+        }
+        return devices;
+    }
+
+    public void StartRecording(int deviceId = 0)
     {
         if (_isRecording) return;
 
@@ -23,7 +34,8 @@ public class AudioRecorderService : IDisposable
         _waveIn = new WaveInEvent
         {
             WaveFormat = new WaveFormat(16000, 16, 1),
-            BufferMilliseconds = 50
+            BufferMilliseconds = 50,
+            DeviceNumber = deviceId
         };
 
         _waveIn.DataAvailable += OnDataAvailable;

@@ -1,12 +1,14 @@
 using System.Windows;
 using System.Windows.Controls;
 using whispershortkey.Services;
+using NAudio.Wave;
 
 namespace whispershortkey.Views;
 
 public partial class SettingsWindow : Window
 {
     private readonly SettingsService _settingsService;
+    private readonly List<(int Id, string Name)> _micDevices;
     private readonly Dictionary<string, string[]> _providerModels = new()
     {
         ["OpenAI"] =
@@ -38,6 +40,9 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         _settingsService = settingsService;
+        _micDevices = AudioRecorderService.GetInputDevices();
+        if (_micDevices.Count == 0)
+            _micDevices.Add((0, "Default"));
         LoadSettings();
     }
 
@@ -69,6 +74,16 @@ public partial class SettingsWindow : Window
             LanguageCombo.SelectedIndex = 0;
 
         ClipboardFallbackCheck.IsChecked = s.UseClipboardFallback;
+
+        MicDeviceCombo.Items.Clear();
+        int selectedMic = 0;
+        for (int i = 0; i < _micDevices.Count; i++)
+        {
+            MicDeviceCombo.Items.Add(_micDevices[i].Name);
+            if (_micDevices[i].Id == s.MicrophoneDeviceId)
+                selectedMic = i;
+        }
+        MicDeviceCombo.SelectedIndex = selectedMic;
 
         _initialized = true;
     }
@@ -103,6 +118,11 @@ public partial class SettingsWindow : Window
 
         s.Language = (LanguageCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "auto";
         s.UseClipboardFallback = ClipboardFallbackCheck.IsChecked ?? true;
+
+        var micIndex = MicDeviceCombo.SelectedIndex;
+        s.MicrophoneDeviceId = micIndex >= 0 && micIndex < _micDevices.Count
+            ? _micDevices[micIndex].Id
+            : 0;
 
         _settingsService.Save();
         Close();

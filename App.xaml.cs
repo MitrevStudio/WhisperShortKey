@@ -62,7 +62,7 @@ public partial class App : WpfApp
             try
             {
                 _targetWindowHandle = GetForegroundWindow();
-                _recorder.StartRecording();
+                _recorder.StartRecording(_settings!.Settings.MicrophoneDeviceId);
                 ShowOverlay();
             }
             catch (Exception ex)

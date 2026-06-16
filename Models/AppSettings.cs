@@ -8,6 +8,7 @@ public class AppSettings
     public Dictionary<string, string> ApiKeys { get; set; } = new();
     public Dictionary<string, string> Models { get; set; } = new();
     public string Language { get; set; } = "auto";
+    public int MicrophoneDeviceId { get; set; } = 0;
     public bool UseClipboardFallback { get; set; } = true;
 
     [JsonIgnore]
