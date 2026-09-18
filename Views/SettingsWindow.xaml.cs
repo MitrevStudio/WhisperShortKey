@@ -1,12 +1,13 @@
 using System.Windows;
 using System.Windows.Controls;
 using whispershortkey.Services;
-using NAudio.Wave;
 
 namespace whispershortkey.Views;
 
 public partial class SettingsWindow : Window
 {
+    private static readonly int[] LengthPresets = [1, 2, 3, 5, 10, 15, 20, 30, 45, 60];
+
     private readonly SettingsService _settingsService;
     private readonly List<(int Id, string Name)> _micDevices;
     private readonly Dictionary<string, string[]> _providerModels = new()
@@ -76,16 +77,59 @@ public partial class SettingsWindow : Window
         ClipboardFallbackCheck.IsChecked = s.UseClipboardFallback;
 
         MicDeviceCombo.Items.Clear();
-        int selectedMic = 0;
-        for (int i = 0; i < _micDevices.Count; i++)
+        var resolvedId = AudioRecorderService.ResolveDeviceId(s.MicrophoneName, s.MicrophoneDeviceId);
+        var selectedMic = 0;
+        for (var i = 0; i < _micDevices.Count; i++)
         {
             MicDeviceCombo.Items.Add(_micDevices[i].Name);
-            if (_micDevices[i].Id == s.MicrophoneDeviceId)
+            if (_micDevices[i].Id == resolvedId)
                 selectedMic = i;
         }
         MicDeviceCombo.SelectedIndex = selectedMic;
 
+        PopulateLengths(s.MaxRecordingMinutes);
+        UpdateLengthHint();
+
         _initialized = true;
+    }
+
+    private void PopulateLengths(int selectedMinutes)
+    {
+        // Keep a hand-edited value from settings.json rather than silently rounding it away.
+        var values = LengthPresets.ToList();
+        if (!values.Contains(selectedMinutes))
+        {
+            values.Add(selectedMinutes);
+            values.Sort();
+        }
+
+        MaxLengthCombo.Items.Clear();
+        var selectedIndex = 0;
+        for (var i = 0; i < values.Count; i++)
+        {
+            var minutes = values[i];
+            MaxLengthCombo.Items.Add(new ComboBoxItem
+            {
+                Content = minutes == 1 ? "1 minute" : $"{minutes} minutes",
+                Tag = minutes
+            });
+
+            if (minutes == selectedMinutes)
+                selectedIndex = i;
+        }
+
+        MaxLengthCombo.SelectedIndex = selectedIndex;
+    }
+
+    /// <summary>
+    /// Spells out the provider's own ceiling, which is where the surprise used to be: a
+    /// 30 minute setting means nothing if Gemini stops accepting audio after 7.
+    /// </summary>
+    private void UpdateLengthHint()
+    {
+        var cap = TranscriptionService.MaxRecordingMinutesFor(_currentProvider);
+        LengthHintText.Text =
+            $"{_currentProvider} accepts about {cap} min per recording - anything longer is capped at that.";
     }
 
     private void ProviderCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -100,6 +144,7 @@ public partial class SettingsWindow : Window
 
         ApiKeyBox.Password = _apiKeys.TryGetValue(_currentProvider, out var key) ? key : "";
         PopulateModels(_currentProvider, _models.TryGetValue(_currentProvider, out var m) ? m : null);
+        UpdateLengthHint();
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -108,7 +153,8 @@ public partial class SettingsWindow : Window
         _apiKeys[_currentProvider] = ApiKeyBox.Password;
         _models[_currentProvider] = ModelCombo.SelectedItem?.ToString() ?? GetDefaultModel(_currentProvider);
 
-        var s = _settingsService.Settings;
+        // Edit a copy: the live instance may be read by a transcription on another thread.
+        var s = _settingsService.Settings.Clone();
         s.Provider = _currentProvider;
 
         foreach (var kvp in _apiKeys)
@@ -120,11 +166,14 @@ public partial class SettingsWindow : Window
         s.UseClipboardFallback = ClipboardFallbackCheck.IsChecked ?? true;
 
         var micIndex = MicDeviceCombo.SelectedIndex;
-        s.MicrophoneDeviceId = micIndex >= 0 && micIndex < _micDevices.Count
-            ? _micDevices[micIndex].Id
-            : 0;
+        var mic = micIndex >= 0 && micIndex < _micDevices.Count ? _micDevices[micIndex] : _micDevices[0];
+        s.MicrophoneName = mic.Name;
+        s.MicrophoneDeviceId = mic.Id;
 
-        _settingsService.Save();
+        if ((MaxLengthCombo.SelectedItem as ComboBoxItem)?.Tag is int maxMinutes)
+            s.MaxRecordingMinutes = maxMinutes;
+
+        _settingsService.Save(s);
         Close();
     }
 

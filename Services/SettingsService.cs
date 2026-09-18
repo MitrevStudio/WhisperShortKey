@@ -9,7 +9,16 @@ public class SettingsService
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "VoiceTray", "settings.json");
 
-    public AppSettings Settings { get; private set; } = new();
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    private volatile AppSettings _settings = new();
+
+    /// <summary>
+    /// The current settings. Replaced wholesale by <see cref="Save"/> rather than mutated,
+    /// so a reader on the transcription thread always sees a consistent snapshot instead of
+    /// a dictionary halfway through being edited by the Settings window.
+    /// </summary>
+    public AppSettings Settings => _settings;
 
     public SettingsService()
     {
@@ -27,25 +36,22 @@ public class SettingsService
             if (File.Exists(SettingsPath))
             {
                 var json = File.ReadAllText(SettingsPath);
-                Settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                _settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
             }
         }
         catch
         {
-            Settings = new AppSettings();
+            _settings = new AppSettings();
         }
     }
 
-    public void Save()
+    public void Save(AppSettings updated)
     {
+        _settings = updated;
+
         try
         {
-            var dir = Path.GetDirectoryName(SettingsPath);
-            if (!string.IsNullOrEmpty(dir))
-                Directory.CreateDirectory(dir);
-
-            var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(SettingsPath, json);
+            AtomicFile.WriteAllText(SettingsPath, JsonSerializer.Serialize(updated, JsonOptions));
         }
         catch
         {
