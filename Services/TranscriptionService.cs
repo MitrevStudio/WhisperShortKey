@@ -33,8 +33,15 @@ public class TranscriptionService
         };
     }
 
+    /// <summary>
+    /// Gemini defaults to 2.5-flash: measured end to end it answered in roughly half the
+    /// time of gemini-3.5-transcribe and a third of gemini-2.5-pro, with the same transcript.
+    /// For dictation the round trip is what is felt, and it barely grows with clip length.
+    /// </summary>
     public static string DefaultModelFor(string provider) =>
-        string.Equals(provider, "Gemini", StringComparison.OrdinalIgnoreCase) ? "gemini-3.5-flash" : "whisper-1";
+        string.Equals(provider, "Gemini", StringComparison.OrdinalIgnoreCase)
+            ? "gemini-2.5-flash"
+            : "whisper-1";
 
     public static long MaxAudioBytesFor(string provider) =>
         string.Equals(provider, "Gemini", StringComparison.OrdinalIgnoreCase)

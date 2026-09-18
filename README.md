@@ -141,13 +141,38 @@ inline in the request. Switching to OpenAI is the simple way to record for longe
 - gpt-4o-transcribe-diarize
 
 ### Gemini
+- **gemini-2.5-flash** (default — fastest in testing)
+- **gemini-3.5-transcribe** — the dedicated speech-to-text model
 - gemini-3.5-flash
 - gemini-3.1-pro-preview
 - gemini-3-flash-preview
 - gemini-3.1-flash-lite
-- gemini-2.5-flash
 - gemini-2.5-flash-lite
 - gemini-2.5-pro
+
+#### Which Gemini model?
+
+For dictation what you feel is the round trip, so that is what was measured — same clip,
+three runs each, medians:
+
+| Model | 4.3 s clip | 28.5 s clip |
+|---|---|---|
+| gemini-2.5-flash | **1.8 s** | **1.6 s** |
+| gemini-3.5-flash | — | 2.5 s |
+| gemini-3.5-transcribe | 3.3 s | 3.1 s |
+| gemini-2.5-pro | 2.8 s | 4.6 s |
+
+All four returned the same transcript, so `gemini-2.5-flash` is the default: it is the
+quickest and its latency barely grows with clip length.
+
+`gemini-3.5-transcribe` is Google's purpose-built speech-to-text model and is reached
+through a different API (`/v1beta/interactions`) which VoiceTray selects automatically. It
+is not the quickest for short dictation, but it is the one to pick for speaker diarization,
+word-level timestamps, hour-long recordings, or transcription priced per minute rather than
+per token. Its "smart" mode also punctuates and drops filler words without being prompted.
+
+Measured from one machine over three runs, so treat the numbers as a ranking rather than a
+benchmark.
 
 ## Project Structure
 

@@ -21,11 +21,19 @@ public partial class SettingsWindow : Window
         ],
         ["Gemini"] =
         [
+            // First entry doubles as the fallback when nothing is saved, so the fastest one
+            // leads. Measured on this machine, 2.5-flash answered in about half the time of
+            // 3.5-transcribe and a third of 2.5-pro, with an identical transcript.
+            "gemini-2.5-flash",
+
+            // The dedicated speech-to-text model. Not the quickest on short dictation, but
+            // the only one here that does diarization, word timestamps and hour-long audio.
+            "gemini-3.5-transcribe",
+
             "gemini-3.5-flash",
             "gemini-3.1-pro-preview",
             "gemini-3-flash-preview",
             "gemini-3.1-flash-lite",
-            "gemini-2.5-flash",
             "gemini-2.5-flash-lite",
             "gemini-2.5-pro"
         ]
